@@ -237,4 +237,46 @@ class FirestoreService {
       return {};
     }
   }
+
+  // Get last 6 months data
+  Future<Map<String, Map<int, double>>> getLast6MonthsData() async {
+    if (currentUserId == null) {
+      return {'income': {}, 'expense': {}};
+    }
+
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month - 5, 1);
+
+    try {
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: currentUserId)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .get();
+
+      Map<int, double> monthlyIncome = {};
+      Map<int, double> monthlyExpense = {};
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final date = (data['date'] as Timestamp).toDate();
+        final amount = (data['amount'] ?? 0).toDouble();
+        final type = data['type'] as String;
+        final month = date.month;
+
+        if (type == 'income') {
+          monthlyIncome[month] = (monthlyIncome[month] ?? 0) + amount;
+        } else {
+          monthlyExpense[month] = (monthlyExpense[month] ?? 0) + amount;
+        }
+      }
+
+      return {
+        'income': monthlyIncome,
+        'expense': monthlyExpense,
+      };
+    } catch (e) {
+      return {'income': {}, 'expense': {}};
+    }
+  }
 }

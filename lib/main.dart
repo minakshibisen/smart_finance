@@ -1,5 +1,7 @@
 import 'package:finance_manager/presentations/bloc/auth/auth_bloc.dart';
 import 'package:finance_manager/presentations/bloc/auth/auth_event.dart';
+import 'package:finance_manager/presentations/bloc/transactions/transaction_bloc.dart';
+import 'package:finance_manager/presentations/bloc/transactions/transaction_event.dart';
 import 'package:finance_manager/presentations/screens/auth/login_screen.dart';
 import 'package:finance_manager/presentations/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import 'core/constants/app_color.dart';
 import 'data/datasources/remote/firebase_service/firebase_auth_service.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
+import 'data/datasources/remote/firestore_service.dart';
 
 
 void main() async {
@@ -43,10 +46,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthBloc(
-        authService: FirebaseAuthService(),
-      )..add(CheckAuthStatusEvent()),
+    return MultiBlocProvider(
+      providers: [
+        // Auth BLoC
+        BlocProvider(
+          create: (context) => AuthBloc(
+            authService: FirebaseAuthService(),
+          )..add(CheckAuthStatusEvent()),
+        ),
+
+        // Transaction BLoC
+        BlocProvider(
+          create: (context) => TransactionBloc(
+            firestoreService: FirestoreService(),
+          )..add(LoadTransactionsEvent()),
+        ),
+      ],
       child: MaterialApp(
         title: 'Smart Finance',
         debugShowCheckedModeBanner: false,

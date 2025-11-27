@@ -111,6 +111,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         body: BlocConsumer<TransactionBloc, TransactionState>(
           listener: (context, state) {
             if (state is TransactionSuccess) {
+              Navigator.pop(context, true);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),

@@ -50,7 +50,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       ) async {
     try {
       await _firestoreService.addTransaction(event.transaction);
-      emit(const TransactionSuccess(message: 'Transaction added successfully'));
+      emit(const TransactionSuccess(message: 'Transaction added successfully',));
+
       add(LoadTransactionsEvent());
     } catch (e) {
       emit(TransactionError(message: e.toString()));
