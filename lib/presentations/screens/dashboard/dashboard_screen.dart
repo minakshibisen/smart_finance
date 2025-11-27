@@ -14,6 +14,7 @@ import '../../widget/cards/transaction_card.dart';
 import '../analytics/analytics_screen.dart';
 import '../auth/login_screen.dart';
 import '../transations/add_transaction_screen.dart';
+import '../transations/transaction_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -44,10 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const Text(
               'Hello,',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             Text(
               user?.displayName ?? 'User',
@@ -72,25 +70,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     : null,
                 child: user?.photoURL == null
                     ? Text(
-                  (user?.displayName ?? 'U').substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
+                        (user?.displayName ?? 'U')
+                            .substring(0, 1)
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
                     : null,
               ),
             ),
           ),
         ],
-      )
-      ,
+      ),
       body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           if (state is TransactionLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is TransactionError) {
@@ -117,7 +114,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      context.read<TransactionBloc>().add(LoadTransactionsEvent());
+                      context.read<TransactionBloc>().add(
+                        LoadTransactionsEvent(),
+                      );
                     },
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
@@ -154,7 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 24),
 
                     // Quick Actions
-// Quick Actions (Replace existing Row with this)
+                    // Quick Actions (Replace existing Row with this)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
@@ -170,11 +169,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => const AddTransactionScreen(),
+                                        builder: (_) =>
+                                            const AddTransactionScreen(),
                                       ),
                                     );
                                     if (result == true) {
-                                      context.read<TransactionBloc>().add(LoadTransactionsEvent());
+                                      context.read<TransactionBloc>().add(
+                                        LoadTransactionsEvent(),
+                                      );
                                     }
                                   },
                                 ),
@@ -189,11 +191,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => const AddTransactionScreen(),
+                                        builder: (_) =>
+                                            const AddTransactionScreen(),
                                       ),
                                     );
                                     if (result == true) {
-                                      context.read<TransactionBloc>().add(LoadTransactionsEvent());
+                                      context.read<TransactionBloc>().add(
+                                        LoadTransactionsEvent(),
+                                      );
                                     }
                                   },
                                 ),
@@ -243,7 +248,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              _showComingSoon(context, 'All Transactions');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const TransactionListScreen(),
+                                ),
+                              );
                             },
                             child: const Text('See All'),
                           ),
@@ -285,9 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const AddTransactionScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
           );
           if (result == true) {
             context.read<TransactionBloc>().add(LoadTransactionsEvent());
@@ -312,9 +320,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 16),
           Text(
             'No transactions yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -361,9 +369,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 await FirebaseAuthService().logout();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                 );
               },
             ),
