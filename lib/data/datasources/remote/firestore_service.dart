@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../domain/entity/budgets.dart';
 import '../../../domain/entity/transactions.dart' as entity;
+import '../../model/budget_model.dart';
 import '../../model/transaction_model.dart';
 
 class FirestoreService {
@@ -279,4 +281,141 @@ class FirestoreService {
       return {'income': {}, 'expense': {}};
     }
   }
+
+
+
+  // ==================== BUDGETS ====================
+
+// Add budget
+  Future<String> addBudget(Budget budget) async {
+    try {
+      final model = BudgetModel.fromEntity(budget);
+      final docRef = await _firestore
+          .collection('budgets')
+          .add(model.toFirestore());
+
+      return docRef.id;
+    } catch (e) {
+      throw 'Failed to add budget: $e';
+    }
+  }
+
+// Get budgets for current user
+  Stream<List<Budget>> getBudgets() {
+    if (currentUserId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('budgets')
+        .where('userId', isEqualTo: currentUserId)
+        .orderBy('month', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => BudgetModel.fromFirestore(doc))
+          .toList();
+    });
+  }
+
+// Get budgets for specific month
+  Future<List<Budget>> getBudgetsForMonth(DateTime month) async {
+    if (currentUserId == null) return [];
+
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    try {
+      final snapshot = await _firestore
+          .collection('budgets')
+          .where('userId', isEqualTo: currentUserId)
+          .where('month', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('month', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
+          .get();
+
+      return snapshot.docs
+          .map((doc) => BudgetModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+// Update budget
+  Future<void> updateBudget(Budget budget) async {
+    try {
+      final model = BudgetModel.fromEntity(budget);
+      await _firestore
+          .collection('budgets')
+          .doc(budget.id)
+          .update(model.toFirestore());
+    } catch (e) {
+      throw 'Failed to update budget: $e';
+    }
+  }
+
+// Delete budget
+  Future<void> deleteBudget(String id) async {
+    try {
+      await _firestore.collection('budgets').doc(id).delete();
+    } catch (e) {
+      throw 'Failed to delete budget: $e';
+    }
+  }
+
+// Get spending for category in month
+  Future<double> getCategorySpending(String category, DateTime month) async {
+    if (currentUserId == null) return 0.0;
+
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    try {
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: currentUserId)
+          .where('type', isEqualTo: 'expense')
+          .where('category', isEqualTo: category)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
+          .get();
+
+      double total = 0.0;
+      for (var doc in snapshot.docs) {
+        total += (doc.data()['amount'] ?? 0).toDouble();
+      }
+
+      return total;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
+// Get total monthly spending
+  Future<double> getMonthlySpending(DateTime month) async {
+    if (currentUserId == null) return 0.0;
+
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    try {
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: currentUserId)
+          .where('type', isEqualTo: 'expense')
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
+          .get();
+
+      double total = 0.0;
+      for (var doc in snapshot.docs) {
+        total += (doc.data()['amount'] ?? 0).toDouble();
+      }
+
+      return total;
+    } catch (e) {
+      return 0.0;
+    }
+  }
+
 }
