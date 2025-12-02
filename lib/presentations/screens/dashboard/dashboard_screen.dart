@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_color.dart';
-
 import '../../../data/datasources/remote/firebase_service/firebase_auth_service.dart';
 import '../../bloc/transactions/transaction_bloc.dart';
 import '../../bloc/transactions/transaction_event.dart';
@@ -13,6 +12,7 @@ import '../../widget/cards/transaction_card.dart';
 
 import '../analytics/analytics_screen.dart';
 import '../auth/login_screen.dart';
+import '../budget/budget_screen.dart';
 import '../transations/add_transaction_screen.dart';
 import '../transations/transaction_list_screen.dart';
 
@@ -204,13 +204,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
+
                               Expanded(
                                 child: QuickActionCard(
-                                  icon: Icons.category_outlined,
-                                  label: 'Categories',
-                                  color: AppColors.accent,
+                                  icon: Icons.account_balance_wallet_outlined,
+                                  label: 'Budget',
+                                  color: Colors.purple,
                                   onTap: () {
-                                    _showComingSoon(context, 'Categories');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const BudgetScreen(),
+                                      ),
+                                    );
                                   },
                                 ),
                               ),

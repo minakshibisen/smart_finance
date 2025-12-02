@@ -1,5 +1,7 @@
 import 'package:finance_manager/presentations/bloc/auth/auth_bloc.dart';
 import 'package:finance_manager/presentations/bloc/auth/auth_event.dart';
+import 'package:finance_manager/presentations/bloc/budget/budget_bloc.dart';
+import 'package:finance_manager/presentations/bloc/budget/budget_event.dart';
 import 'package:finance_manager/presentations/bloc/transactions/transaction_bloc.dart';
 import 'package:finance_manager/presentations/bloc/transactions/transaction_event.dart';
 import 'package:finance_manager/presentations/screens/auth/login_screen.dart';
@@ -60,6 +62,11 @@ class MyApp extends StatelessWidget {
           create: (context) => TransactionBloc(
             firestoreService: FirestoreService(),
           )..add(LoadTransactionsEvent()),
+        ),
+        BlocProvider(
+          create: (context) => BudgetBloc(
+            firestoreService: FirestoreService(),
+          )..add(LoadBudgetsEvent()),
         ),
       ],
       child: MaterialApp(
