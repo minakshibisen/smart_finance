@@ -45,7 +45,7 @@ class FirestoreService {
     });
   }
 
-  // Get transactions by date range
+  // Get transaction by date range
   Stream<List<entity.Transaction>> getTransactionsByDateRange({
     required DateTime startDate,
     required DateTime endDate,
@@ -319,6 +319,7 @@ class FirestoreService {
   }
 
 // Get budgets for specific month
+/*
   Future<List<Budget>> getBudgetsForMonth(DateTime month) async {
     if (currentUserId == null) return [];
 
@@ -340,6 +341,7 @@ class FirestoreService {
       return [];
     }
   }
+*/
 
 // Update budget
   Future<void> updateBudget(Budget budget) async {
@@ -364,7 +366,7 @@ class FirestoreService {
   }
 
 // Get spending for category in month
-  Future<double> getCategorySpending(String category, DateTime month) async {
+/*  Future<double> getCategorySpending(String category, DateTime month) async {
     if (currentUserId == null) return 0.0;
 
     final startOfMonth = DateTime(month.year, month.month, 1);
@@ -389,7 +391,7 @@ class FirestoreService {
     } catch (e) {
       return 0.0;
     }
-  }
+  }*/
 
 // Get total monthly spending
   Future<double> getMonthlySpending(DateTime month) async {
@@ -417,5 +419,65 @@ class FirestoreService {
       return 0.0;
     }
   }
+// Get budgets for specific month (FIXED)
+  Future<List<Budget>> getBudgetsForMonth(DateTime month) async {
+    if (currentUserId == null) return [];
 
+    try {
+      final snapshot = await _firestore
+          .collection('budgets')
+          .where('userId', isEqualTo: currentUserId)
+          .get();
+
+      // Filter by month manually
+      final budgets = snapshot.docs
+          .map((doc) => BudgetModel.fromFirestore(doc))
+          .where((budget) {
+        return budget.month.year == month.year &&
+            budget.month.month == month.month;
+      })
+          .toList();
+
+      return budgets;
+    } catch (e) {
+      print('Error getting budgets: $e');
+      return [];
+    }
+  }
+
+  // Get spending for category in month (FIXED)
+
+  Future<double> getCategorySpending(String category, DateTime month) async {
+    if (currentUserId == null) return 0.0;
+
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    try {
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: currentUserId)
+          .where('type', isEqualTo: 'expense')
+          .get();
+
+      double total = 0.0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final date = (data['date'] as Timestamp).toDate();
+        final transactionCategory = data['category'] as String;
+
+        // Check if transaction is in the month and matches categories
+        if (date.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+            date.isBefore(endOfMonth.add(const Duration(days: 1))) &&
+            transactionCategory.toLowerCase() == category.toLowerCase()) {
+          total += (data['amount'] ?? 0).toDouble();
+        }
+      }
+
+      return total;
+    } catch (e) {
+      print('Error getting category spending: $e');
+      return 0.0;
+    }
+  }
 }

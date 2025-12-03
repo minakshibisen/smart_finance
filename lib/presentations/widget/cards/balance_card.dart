@@ -17,24 +17,21 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.secondary,
-          ],
-        ),
+        color: Colors.white, // simple clean background
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black12,
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,39 +39,47 @@ class BalanceCard extends StatelessWidget {
           const Text(
             'Total Balance',
             style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
+              color: Colors.black54,
+              fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 10),
+
           Text(
             CurrencyFormatter.format(totalBalance),
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
+              color: Colors.black,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 24),
+
+          const SizedBox(height: 22),
+
           Row(
             children: [
               Expanded(
-                child: _buildInfoTile(
-                  icon: Icons.arrow_downward,
+                child: _infoTile(
+                  icon: Icons.arrow_downward_rounded,
                   label: 'Income',
                   amount: totalIncome,
-                  color: Colors.greenAccent,
+                  bgColor: Colors.green.shade50,
+                  iconColor: Colors.green,
+                  textColor: Colors.black87,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: _buildInfoTile(
-                  icon: Icons.arrow_upward,
+                child: _infoTile(
+                  icon: Icons.arrow_upward_rounded,
                   label: 'Expense',
                   amount: totalExpense,
-                  color: Colors.redAccent,
+                  bgColor: Colors.red.shade50,
+                  iconColor: Colors.red,
+                  textColor: Colors.black87,
                 ),
               ),
             ],
@@ -84,45 +89,58 @@ class BalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile({
+  Widget _infoTile({
     required IconData icon,
     required String label,
     required double amount,
-    required Color color,
+    required Color bgColor,
+    required Color iconColor,
+    required Color textColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: color,
-                size: 16,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 18,
+                ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             CurrencyFormatter.formatWithoutDecimals(amount),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

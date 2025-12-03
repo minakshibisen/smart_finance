@@ -19,56 +19,83 @@ class TransactionCard extends StatelessWidget {
     final isIncome = transaction.type == entity.TransactionType.income;
     final color = isIncome ? AppColors.income : AppColors.expense;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+        border: Border.all(
+          color: Colors.black.withOpacity(0.04),
+        ),
+      ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              // Category icon
+              // Category Icon Container
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _getCategoryIcon(transaction.category),
-                  color: color,
-                  size: 24,
+                  color: Colors.grey.shade700,
+                  size: 22,
                 ),
               ),
 
+
               const SizedBox(width: 16),
 
-              // Details
+              // Details Section
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       transaction.category,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       DateFormatter.format(transaction.date),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 13,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    if (transaction.notes != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        transaction.notes!,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+
+                    // Notes (optional)
+                    if (transaction.notes != null &&
+                        transaction.notes!.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          transaction.notes!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textPrimary.withOpacity(0.8),
+                          ),
+                        ),
                       ),
-                    ],
                   ],
                 ),
               ),
@@ -77,11 +104,11 @@ class TransactionCard extends StatelessWidget {
               Text(
                 '${isIncome ? '+' : '-'} ${CurrencyFormatter.formatWithoutDecimals(transaction.amount)}',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isIncome ? Colors.green.shade700 : Colors.red.shade700,
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -92,23 +119,23 @@ class TransactionCard extends StatelessWidget {
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
       case 'food':
-        return Icons.restaurant;
+        return Icons.restaurant_rounded;
       case 'shopping':
-        return Icons.shopping_bag;
+        return Icons.shopping_bag_rounded;
       case 'transport':
-        return Icons.directions_car;
+        return Icons.directions_car_rounded;
       case 'entertainment':
-        return Icons.movie;
+        return Icons.movie_filter_rounded;
       case 'bills':
-        return Icons.receipt_long;
+        return Icons.receipt_long_rounded;
       case 'salary':
-        return Icons.attach_money;
+        return Icons.wallet_rounded;
       case 'business':
-        return Icons.business_center;
+        return Icons.business_center_rounded;
       case 'investment':
-        return Icons.trending_up;
+        return Icons.trending_up_rounded;
       default:
-        return Icons.category;
+        return Icons.category_rounded;
     }
   }
 }
