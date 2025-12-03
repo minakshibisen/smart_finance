@@ -4,6 +4,7 @@ import 'package:finance_manager/presentations/bloc/budget/budget_bloc.dart';
 import 'package:finance_manager/presentations/bloc/budget/budget_event.dart';
 import 'package:finance_manager/presentations/bloc/transactions/transaction_bloc.dart';
 import 'package:finance_manager/presentations/bloc/transactions/transaction_event.dart';
+import 'package:finance_manager/presentations/cubits/theme/theme_cubit.dart';
 import 'package:finance_manager/presentations/screens/auth/login_screen.dart';
 import 'package:finance_manager/presentations/screens/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        // Theme Cubit
+        BlocProvider(
+          create: (context) => ThemeCubit(),
+        ),
+
         // Auth BLoC
         BlocProvider(
           create: (context) => AuthBloc(
@@ -63,19 +69,25 @@ class MyApp extends StatelessWidget {
             firestoreService: FirestoreService(),
           )..add(LoadTransactionsEvent()),
         ),
+
+        // Budget BLoC
         BlocProvider(
           create: (context) => BudgetBloc(
             firestoreService: FirestoreService(),
           )..add(LoadBudgetsEvent()),
         ),
       ],
-      child: MaterialApp(
-        title: 'Smart Finance',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        home: const AuthWrapper(),
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp(
+            title: 'Smart Finance',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            home: const AuthWrapper(),
+          );
+        },
       ),
     );
   }

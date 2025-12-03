@@ -10,9 +10,13 @@ import '../../widget/cards/balance_card.dart';
 import '../../widget/cards/quick_action_card.dart';
 import '../../widget/cards/transaction_card.dart';
 
+import '../../widget/common/theme_toggle_button.dart';
 import '../analytics/analytics_screen.dart';
 import '../auth/login_screen.dart';
 import '../budget/budget_screen.dart';
+import '../profile/profile_edit_screen.dart';
+import '../reports/export_screen.dart';
+import '../settings/setting_screens.dart';
 import '../transations/add_transaction_screen.dart';
 import '../transations/transaction_list_screen.dart';
 
@@ -38,53 +42,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Hello,',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-            Text(
-              user?.displayName ?? 'User',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            const Text('Hello,', style: TextStyle(fontSize: 14)),
+            Text(user?.displayName ?? 'User'),
           ],
         ),
         actions: [
-          GestureDetector(
-            onTap: () => _showProfileMenu(context),
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.primary,
-                backgroundImage: user?.photoURL != null
-                    ? NetworkImage(user!.photoURL!)
-                    : null,
-                child: user?.photoURL == null
-                    ? Text(
-                        (user?.displayName ?? 'U')
-                            .substring(0, 1)
-                            .toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
+          const ThemeToggleButton(), // Add this
+          IconButton(
+            icon: CircleAvatar(),
+            onPressed: () => _showProfileMenu(context),
           ),
+          const SizedBox(width: 8),
         ],
-      ),
-      body: BlocBuilder<TransactionBloc, TransactionState>(
+      ),      body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           if (state is TransactionLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -350,10 +323,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.person_outline),
-              title: const Text('Profile'),
+              title: const Text('Edit Profile'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProfileEditScreen(),
+                  ),
+                );
+                // Refresh if profile updated
+                if (result == true) {
+                  setState(() {});
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: const Text('Export Reports'),
               onTap: () {
                 Navigator.pop(context);
-                _showComingSoon(context, 'Profile');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ExportScreen(),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -361,9 +356,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                _showComingSoon(context, 'Settings');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsScreen(),
+                  ),
+                );
               },
             ),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: AppColors.expense),
               title: const Text(
@@ -375,7 +376,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 await FirebaseAuthService().logout();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                  ),
                 );
               },
             ),
@@ -384,7 +387,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   void _showComingSoon(BuildContext context, String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
