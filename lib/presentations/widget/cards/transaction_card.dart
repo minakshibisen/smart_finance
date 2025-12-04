@@ -20,17 +20,11 @@ class TransactionCard extends StatelessWidget {
     final color = isIncome ? AppColors.income : AppColors.expense;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
+
         border: Border.all(
           color: Colors.black.withOpacity(0.04),
         ),
