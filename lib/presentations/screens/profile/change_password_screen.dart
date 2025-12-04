@@ -5,7 +5,6 @@ import '../../../data/datasources/remote/firebase_service/firebase_auth_service.
 import '../../widget/common/custom_button.dart';
 import '../../widget/common/custom_text_field.dart';
 
-
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 

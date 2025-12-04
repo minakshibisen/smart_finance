@@ -21,13 +21,7 @@ class BalanceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white, // simple clean background
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+
         border: Border.all(
           color: Colors.grey.shade200,
           width: 1,
@@ -57,7 +51,7 @@ class BalanceCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 10),
 
           Row(
             children: [
@@ -98,7 +92,7 @@ class BalanceCard extends StatelessWidget {
     required Color textColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(14),

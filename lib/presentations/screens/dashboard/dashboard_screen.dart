@@ -24,17 +24,38 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   final user = FirebaseAuth.instance.currentUser;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     context.read<TransactionBloc>().add(LoadTransactionsEvent());
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
@@ -47,7 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 60, color: AppColors.expense),
+                  Icon(Icons.error_outline, size: 60, color: AppColors.expense),
                   const SizedBox(height: 16),
                   Text('Error loading data', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
@@ -66,46 +87,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (state is TransactionLoaded) {
             final transactions = state.transactions.take(5).toList();
 
-            return CustomScrollView(
-              slivers: [
-                // App Bar
-                SliverAppBar(
-                  expandedHeight: 80,
-                  floating: false,
-                  pinned: true,
-                  elevation: 0,
-                  backgroundColor: AppColors.primary,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primary.withOpacity(0.1),
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // Modern App Bar with Gradient
+                  SliverAppBar(
+                    expandedHeight: 140,
+                    floating: false,
+                    pinned: true,
+                    elevation: 0,
+                    backgroundColor: AppColors.primary,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.primary,
+                              AppColors.secondary,
+                            ],
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            // Decorative circles
+                            Positioned(
+                              right: -50,
+                              top: -50,
+                              child: Container(
+                                width: 200,
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withOpacity(0.1),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: -30,
+                              bottom: -30,
+                              child: Container(
+                                width: 150,
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withOpacity(0.05),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
                       title: Row(
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
                               );
+                              if (result == true) setState(() {});
                             },
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundImage:
-                              user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
-                              child: user?.photoURL == null
-                                  ? Text(
-                                user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: const TextStyle(color: Colors.white),
-                              )
-                                  : null,
+                            child: Hero(
+                              tag: 'profile_pic',
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 22,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: user?.photoURL != null
+                                      ? NetworkImage(user!.photoURL!)
+                                      : null,
+                                  child: user?.photoURL == null
+                                      ? Text(
+                                    user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  )
+                                      : null,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -113,217 +190,264 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('Welcome', style: TextStyle(fontSize: 12, color: Colors.white)),
+                              Text(
+                                'Welcome Back 👋',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                               Text(
                                 user?.displayName ?? "User",
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-
-                    titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined,color: Colors.white,),
-                      onPressed: () {
-                        _showComingSoon(context, 'Notifications');
-                      },
+                      titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.more_vert,color: Colors.white,),
-                      onPressed: () => _showProfileMenu(context),
-                    ),
-                  ],
-                ),
-
-                // Main Content
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-
-                      // Balance Card
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: BalanceCard(
-                          totalBalance: state.balance,
-                          totalIncome: state.totalIncome,
-                          totalExpense: state.totalExpense,
+                    actions: [
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
                         ),
+                        onPressed: () => _showComingSoon(context, 'Notifications'),
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Quick Actions Grid
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 1.5,
-                          children: [
-                            _buildActionCard(
-                              context: context,
-                              icon: Icons.add_circle,
-                              title: 'Add Income',
-                              subtitle: 'Record income',
-                              gradient: LinearGradient(
-                                colors: [AppColors.income, AppColors.income.withOpacity(0.7)],
-                              ),
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-                                );
-                                if (result == true) {
-                                  context.read<TransactionBloc>().add(LoadTransactionsEvent());
-                                }
-                              },
-                            ),
-                            _buildActionCard(
-                              context: context,
-                              icon: Icons.remove_circle,
-                              title: 'Add Expense',
-                              subtitle: 'Track spending',
-                              gradient: LinearGradient(
-                                colors: [AppColors.expense, AppColors.expense.withOpacity(0.7)],
-                              ),
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-                                );
-                                if (result == true) {
-                                  context.read<TransactionBloc>().add(LoadTransactionsEvent());
-                                }
-                              },
-                            ),
-                            _buildActionCard(
-                              context: context,
-                              icon: Icons.pie_chart,
-                              title: 'Analytics',
-                              subtitle: 'View insights',
-                              gradient: LinearGradient(
-                                colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
-                                );
-                              },
-                            ),
-                            _buildActionCard(
-                              context: context,
-                              icon: Icons.account_balance_wallet,
-                              title: 'Budget',
-                              subtitle: 'Manage budget',
-                              gradient: LinearGradient(
-                                colors: [Colors.purple, Colors.purple.withOpacity(0.7)],
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const BudgetScreen()),
-                                );
-                              },
-                            ),
-                          ],
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.menu, color: Colors.white, size: 20),
                         ),
+                        onPressed: () => _showProfileMenu(context),
                       ),
-
-                      const SizedBox(height: 32),
-
-                      // Recent Transactions Header
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Recent Transactions',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const TransactionListScreen()),
-                                );
-                              },
-                              icon: const Icon(Icons.arrow_forward, size: 16),
-                              label: const Text('See All'),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Recent Transactions List
-                      if (transactions.isEmpty)
-                        _buildEmptyState()
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: transactions.length,
-                          itemBuilder: (context, index) {
-                            return TransactionCard(
-                              transaction: transactions[index],
-                              onTap: () {
-                                _showComingSoon(context, 'Transaction Details');
-                              },
-                            );
-                          },
-                        ),
-
-                      const SizedBox(height: 100),
+                      const SizedBox(width: 8),
                     ],
                   ),
-                ),
-              ],
+
+                  // Main Content
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+
+                        // Balance Card with Animation
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: BalanceCard(
+                            totalBalance: state.balance,
+                            totalIncome: state.totalIncome,
+                            totalExpense: state.totalExpense,
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // Section Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Quick Actions',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // Quick Actions Grid - Modern Cards
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 1.6,
+                            children: [
+                              _buildModernActionCard(
+                                context: context,
+                                icon: Icons.trending_up,
+                                title: 'Add Income',
+                                subtitle: 'Record earnings',
+                                color: AppColors.income,
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                                  );
+                                  if (result == true) {
+                                    context.read<TransactionBloc>().add(LoadTransactionsEvent());
+                                  }
+                                },
+                              ),
+                              _buildModernActionCard(
+                                context: context,
+                                icon: Icons.trending_down,
+                                title: 'Add Expense',
+                                subtitle: 'Track spending',
+                                color: AppColors.expense,
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                                  );
+                                  if (result == true) {
+                                    context.read<TransactionBloc>().add(LoadTransactionsEvent());
+                                  }
+                                },
+                              ),
+                              _buildModernActionCard(
+                                context: context,
+                                icon: Icons.analytics,
+                                title: 'Analytics',
+                                subtitle: 'View insights',
+                                color: AppColors.primary,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                                  );
+                                },
+                              ),
+                              _buildModernActionCard(
+                                context: context,
+                                icon: Icons.account_balance_wallet,
+                                title: 'Budget',
+                                subtitle: 'Manage funds',
+                                color: Colors.purple,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const BudgetScreen()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Recent Transactions Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Recent Transactions',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Spacer(),
+                              TextButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const TransactionListScreen()),
+                                  );
+                                },
+                                icon: const Icon(Icons.arrow_forward, size: 16),
+                                label: const Text('See All'),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Transactions List
+                        if (transactions.isEmpty)
+                          _buildEmptyState()
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: transactions.length,
+                            itemBuilder: (context, index) {
+                              return TransactionCard(
+                                transaction: transactions[index],
+                                onTap: () => _showComingSoon(context, 'Transaction Details'),
+                              );
+                            },
+                          ),
+
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
           return const SizedBox();
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: SizedBox(
-        height: 100,
-        width: 200,
-        child: Padding(
-          padding: const EdgeInsets.only(right: 8, bottom: 8),
-          child: FloatingActionButton.extended(
-            onPressed: () {},
-            label: const Text("Add Transaction"),
-            icon: const Icon(Icons.add),
-          ),
-        ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+          );
+          if (result == true) {
+            context.read<TransactionBloc>().add(LoadTransactionsEvent());
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Transaction'),
+        elevation: 6,
+        backgroundColor: AppColors.primary,
       ),
-
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
-  Widget _buildActionCard({
+  Widget _buildModernActionCard({
     required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
-    required Gradient gradient,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -331,54 +455,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withOpacity(0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
         ),
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                shape: BoxShape.circle,
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: Colors.blue, size: 22),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: color,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: color.withOpacity(0.7),
                   ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey)
           ],
         ),
       ),
@@ -387,32 +505,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withOpacity(0.1),
+                  AppColors.secondary.withOpacity(0.1),
+                ],
+              ),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.receipt_long_outlined,
               size: 60,
-              color: AppColors.primary.withOpacity(0.5),
+              color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             'No transactions yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Start tracking your finances by adding\nyour first transaction',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            'Start tracking your finances by\nadding your first transaction',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
             ),
             textAlign: TextAlign.center,
@@ -428,8 +551,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 context.read<TransactionBloc>().add(LoadTransactionsEvent());
               }
             },
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_circle_outline),
             label: const Text('Add Transaction'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
           ),
         ],
       ),
@@ -439,86 +565,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showProfileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: const Icon(Icons.person, color: AppColors.primary),
+              const SizedBox(height: 24),
+              _buildMenuTile(
+                icon: Icons.person,
+                title: 'Edit Profile',
+                color: AppColors.primary,
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
+                  );
+                  if (result == true) setState(() {});
+                },
               ),
-              title: const Text('Edit Profile'),
-              onTap: () async {
-                Navigator.pop(context);
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
-                );
-                if (result == true) setState(() {});
-              },
-            ),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.secondary.withOpacity(0.1),
-                child: const Icon(Icons.download, color: AppColors.secondary),
+              _buildMenuTile(
+                icon: Icons.download,
+                title: 'Export Reports',
+                color: AppColors.secondary,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ExportScreen()),
+                  );
+                },
               ),
-              title: const Text('Export Reports'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ExportScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: const Icon(Icons.settings, color: AppColors.primary),
+              _buildMenuTile(
+                icon: Icons.settings,
+                title: 'Settings',
+                color: AppColors.primary,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
               ),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.expense.withOpacity(0.1),
-                child: const Icon(Icons.logout, color: AppColors.expense),
+              const Divider(height: 32),
+              _buildMenuTile(
+                icon: Icons.logout,
+                title: 'Logout',
+                color: AppColors.expense,
+                onTap: () async {
+                  Navigator.pop(context);
+                  await FirebaseAuthService().logout();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  );
+                },
               ),
-              title: const Text('Logout', style: TextStyle(color: AppColors.expense)),
-              onTap: () async {
-                Navigator.pop(context);
-                await FirebaseAuthService().logout();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMenuTile({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color == AppColors.expense ? color : null,
+        ),
+      ),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+      onTap: onTap,
     );
   }
 
@@ -527,6 +676,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       SnackBar(
         content: Text('$feature - Coming Soon!'),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
