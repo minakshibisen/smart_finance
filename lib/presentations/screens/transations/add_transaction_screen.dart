@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -252,10 +253,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     const SizedBox(height: 32),
 
                     // Submit Button
-                    CustomButton(
-                      text: 'Add Transaction',
-                      onPressed: _handleSubmit,
-                      isLoading: state is TransactionLoading,
+                    FadeInLeft(
+                      child: CustomButton(
+                        text: 'Add Transaction',
+                        onPressed: _handleSubmit,
+                        isLoading: state is TransactionLoading,
+                      ),
                     ),
                   ],
                 ),
