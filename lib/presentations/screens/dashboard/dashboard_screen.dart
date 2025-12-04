@@ -93,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   // Modern App Bar with Gradient
-                  SliverAppBar(
+                /*  SliverAppBar(
                     expandedHeight: 140,
                     floating: false,
                     pinned: true,
@@ -237,6 +237,90 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       ),
                       const SizedBox(width: 8),
                     ],
+                  ),*/
+                  SliverAppBar(
+                    expandedHeight: 120,
+                    floating: false,
+                    pinned: true,
+                    elevation: 0,
+                    backgroundColor: AppColors.primary,
+                    surfaceTintColor: Colors.transparent, // Material 3 shadow hatane ke liye
+
+                    flexibleSpace: FlexibleSpaceBar(
+                      titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+                      title: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
+                              );
+                              if (result == true) setState(() {});
+                            },
+                            child: Hero(
+                              tag: 'profile_pic',
+                              child: CircleAvatar(
+                                radius: 22,
+                                backgroundColor: Colors.grey.shade200,
+                                backgroundImage: user?.photoURL != null
+                                    ? NetworkImage(user!.photoURL!)
+                                    : null,
+                                child: user?.photoURL == null
+                                    ? Text(
+                                  user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                )
+                                    : null,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Welcome Back 👋',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Text(
+                                user?.displayName ?? "User",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    actions: [
+                      IconButton(
+                        icon: Icon(Icons.notifications_none_rounded,
+                            size: 24, color: Colors.white),
+                        onPressed: () => _showComingSoon(context, 'Notifications'),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.menu_rounded,
+                            size: 24, color: Colors.white),
+                        onPressed: () => _showProfileMenu(context),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
 
                   // Main Content
@@ -290,9 +374,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 1.6,
+                            mainAxisSpacing: 15,
+                            crossAxisSpacing: 10,
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                            childAspectRatio: 1.4,
                             children: [
                               _buildModernActionCard(
                                 context: context,
@@ -356,7 +441,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           ),
                         ),
 
-                        const SizedBox(height: 32),
 
                         // Recent Transactions Header
                         Padding(
@@ -393,13 +477,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           ),
                         ),
 
-                        const SizedBox(height: 12),
 
                         // Transactions List
                         if (transactions.isEmpty)
                           _buildEmptyState()
                         else
                           ListView.builder(
+                            padding: EdgeInsets.symmetric(vertical: 5),
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: transactions.length,
@@ -411,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             },
                           ),
 
-                        const SizedBox(height: 100),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -435,10 +519,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Transaction'),
-        elevation: 6,
         backgroundColor: AppColors.primary,
+        elevation: 6,
+
+        // 👇 Yeh line FAB ko circle se rectangle banati hai
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+
     );
   }
 
